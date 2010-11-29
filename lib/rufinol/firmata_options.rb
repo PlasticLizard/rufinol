@@ -5,7 +5,7 @@ module Rufinol
     class << self
       attr_accessor :baud_rate, :serial_port
 
-      def parse!(args)
+      def parse!(args=[])
         self.baud_rate = 57600
 
         #Allow the serial port to be specified without a switch

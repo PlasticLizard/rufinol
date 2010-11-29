@@ -3,6 +3,7 @@ require 'thin'
 require 'eventmachine'
 require 'em-websocket'
 require 'rufirmata'
+require 'json'
 
 base_dir = File.dirname(__FILE__)
 [
@@ -29,29 +30,59 @@ module Rufinol
       #argv << ["-e", "production"] unless ARGV.include?("-e")
 
 
-      initialize_firmata
 
       EM.run do
+        initialize_rufirmata
         initialize_web_sockets(argv)
         initialize_web_server(argv)
+
       end
 
       shutdown_firmata
-    end
+      end
+
 
     def configure!
     end
 
     private
 
-    def initialize_firmata
+    def iterate_rufirmata
+      @firmata.iterate
+      EM.next_tick {  EM.defer {  iterate_rufirmata } }
+    end
+
+    def initialize_rufirmata
       assert_serial_port_specified!
       @firmata = Arduino.new Rufinol::FirmataOptions.serial_port,
-                             :baud_rate=>Rufinol::FirmataOptions.baud_rate
+      :baud_rate=>Rufinol::FirmataOptions.baud_rate, :auto_start=>false
+      @firmata.digital[5].mode = Rufirmata::INPUT
+
+      @firmata.set_observer(:pattern=>/after/) do |board, change_type, args|
+        if self.channel
+          begin
+            pin = args.delete(:pin)
+            message = pin_status_message(pin)
+            self.channel.push message
+          rescue Exception => ex
+            puts ex.message
+            puts ex.backtrace
+          end
+        end
+
+        iterate_rufirmata
+      end
+
     end
 
     def shutdown_firmata
       @firmata.close
+    end
+
+    def pin_status_message(pin)
+      pin_type = pin.pin_type == Rufirmata::DIGITAL ? "Digital" : "Analog"
+      JSON.dump :pin_type=>pin_type, :pin_number=>pin.pin_number,
+                :pin_mode=>pin.mode, :value=>pin.value, :reporting=>pin.reporting
     end
 
     def initialize_web_server(argv)
@@ -64,9 +95,8 @@ module Rufinol
 
         ws.onopen do
           sid = @channel.subscribe { |msg| ws.send msg }
-          @channel.push "#{sid} connected!"
 
-          ws.onmessage { |msg| @channel.push "<#{sid}>: #{msg}" }
+          ws.onmessage { |msg| @channel.push msg }
 
           ws.onclose { @channel.unsubscribe(sid) }
         end

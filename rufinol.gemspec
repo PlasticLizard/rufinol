@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_dependency "rufirmata"
   s.add_dependency "eventmachine"
   s.add_dependency "em-websocket"
+  s.add_dependency "json"
 
   s.add_development_dependency 'rspec', '~> 2.1'
   s.add_development_dependency 'fuubar'

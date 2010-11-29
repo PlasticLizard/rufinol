@@ -1,0 +1,70 @@
+<html>
+  <head>
+    <link href="stylesheets/application.css" media="screen" rel="stylesheet" type="text/css" />
+    <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js'></script>
+    <script src='javascripts/swfobject.js'></script>
+    <script src='javascripts/FABridge.js'></script>
+    <script src='javascripts/web_socket.js'></script>
+    <script src='javascripts/board.js'></script>
+    <script>
+      $(document).ready(function(){
+      ws = new WebSocket("ws://<%=request.host%>:3001/");
+      ws.onmessage = function(evt) { updatePin(JSON.parse(evt.data)); };
+      ws.onclose = function() {};
+      ws.onopen = function() { console.log("connected");};
+
+      });
+    </script>
+  </head>
+  <body>
+    <%=@board.digital[6].read%>
+    <%=@board.start_listening%>
+
+    <h2>Digital Ports</h2>
+    <%@board.digital_ports.each do |port|%>
+    <div style="float:left">
+      <h3>Port #: <%=port.port_number%><%=" *Reporting" if port.reporting%></h3>
+      <table>
+        <tr>
+          <th>Pin #</th>
+          <th>PWM Capable</th>
+          <th>Reporting</th>
+          <th>Pin Mode</th>
+          <th>Pin Value</th>
+        </tr>
+        <%port.pins.each do |pin|%>
+        <tr id="Digital_<%=pin.pin_number%>">
+          <td><%=pin.pin_number%></td>
+          <td><%=pin.pwm ? "*" : ""%></td>
+          <td><%=pin.reporting ? "*" : ""%></td>
+          <td><%=pin_select(pin)%></td>
+          <td>
+            <div data-pin-field="value"><%=pin.value.nil? ? "?" : pin.value%></div>
+          </td>
+        </tr>
+        <%end%>
+      </table>
+    </div>
+    <%end%>
+    <div style="clear:both"></div>
+    <h2>Analog Pins</h2>
+    <table>
+      <tr>
+        <th>Pin #</th>
+        <th>Reporting</td>
+        <th>Pin Mode</th>
+        <th>Pin Value</th>
+      </tr>
+      <%@board.analog.each do |pin|%>
+      <tr>
+        <td><%=pin.pin_number%></td>
+        <td><%=pin.reporting ? "*" : ""%></td>
+        <td><%=pin_select(pin)%></td>
+        <td>
+           <div data-pin-field="value"><%=pin.value.nil? ? "?" : pin.value%></div>
+        </td>
+      </tr>
+      <%end%>
+    </table>
+  </body>
+</html>
