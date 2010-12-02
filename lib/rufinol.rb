@@ -8,6 +8,7 @@ require 'json'
 base_dir = File.dirname(__FILE__)
 [
  'version',
+ 'extensions',
  'firmata_options',
  'application'
 ].each {|req| require File.join(base_dir,'rufinol',req)}
@@ -29,13 +30,10 @@ module Rufinol
       argv << ["-p", "3000"] unless ARGV.include?("-p")
       #argv << ["-e", "production"] unless ARGV.include?("-e")
 
-
-
       EM.run do
         initialize_rufirmata
         initialize_web_sockets(argv)
         initialize_web_server(argv)
-
       end
 
       shutdown_firmata
@@ -62,27 +60,18 @@ module Rufinol
         if self.channel
           begin
             pin = args.delete(:pin)
-            message = pin_status_message(pin)
-            self.channel.push message
+            self.channel.push JSON.dump(pin.to_message)
           rescue Exception => ex
             puts ex.message
             puts ex.backtrace
           end
         end
-
-        iterate_rufirmata
       end
-
+      iterate_rufirmata
     end
 
     def shutdown_firmata
       @firmata.close
-    end
-
-    def pin_status_message(pin)
-      pin_type = pin.pin_type == Rufirmata::DIGITAL ? "Digital" : "Analog"
-      JSON.dump :pin_type=>pin_type, :pin_number=>pin.pin_number,
-                :pin_mode=>pin.mode, :value=>pin.value, :reporting=>pin.reporting
     end
 
     def initialize_web_server(argv)

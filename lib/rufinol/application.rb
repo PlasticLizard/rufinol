@@ -7,7 +7,7 @@ module Rufinol
     set :root, File.join(File.expand_path(File.dirname(__FILE__)))
 
     get '/' do
-      @board = Rufinol.firmata
+      @board = Rufinol.firmata.to_message
       erb :board
     end
 
@@ -18,12 +18,12 @@ module Rufinol
     helpers do
 
       def pin_select(pin)
-        id = pin.pin_type == (Rufirmata::ANALOG ? "a_" : "d_") +  pin.pin_number.to_s
+        id = "#{pin[:pin_type]}_#{pin[:pin_number]}"
         sel = "<select id='#{id}' name='#{id}'>"
         {"Input"=>Rufirmata::INPUT, "Output"=>Rufirmata::OUTPUT,
          "Analog"=>Rufirmata::ANALOG, "PWM"=>Rufirmata::PWM,
           "Unavailable"=>Rufirmata::UNAVAILABLE}.each_pair do |key,value|
-          selected = pin.mode == value ? " selected" : ""
+          selected = pin[:mode] == value ? " selected" : ""
           sel +="<option value=#{value}#{selected}>#{key}</option>"
         end
         sel += "</select>"
