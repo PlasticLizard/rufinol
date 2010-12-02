@@ -5,3 +5,6 @@ RSpec::Core::RakeTask.new(:core) do |spec|
 end
 
 task :default => :core
+
+require 'jasmine'
+load 'jasmine/tasks/jasmine.rake'
