@@ -51,6 +51,16 @@ describe Rufirmata::Pin do
       @message[:value].should == 1.15
     end
 
+    it "should convert the value to a string for formatted_value" do
+      @message[:formatted_value].should == 1.15.to_s
+    end
+
+    it "should create a unique id for the pin based on its type" do
+      @message[:id].should == 'a0'
+    end
+
+
+
   end
 end
 

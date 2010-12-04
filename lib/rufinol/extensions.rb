@@ -21,7 +21,10 @@ module Rufirmata
         :mode => mode,
         :pwm => pwm,
         :reporting => reporting,
-        :value => value
+        :value => value,
+        :formatted_value => value.nil? ? "" : value.to_s,
+        :id => "#{pin_type == Rufirmata::DIGITAL ? 'd' : 'a'}#{pin_number}",
+        :port_number => port ? port.port_number : nil
       }
     end
   end

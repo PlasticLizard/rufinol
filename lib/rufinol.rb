@@ -54,6 +54,7 @@ module Rufinol
       assert_serial_port_specified!
       @firmata = Arduino.new Rufinol::FirmataOptions.serial_port,
       :baud_rate=>Rufinol::FirmataOptions.baud_rate, :auto_start=>false
+
       @firmata.digital[5].mode = Rufirmata::INPUT
 
       @firmata.set_observer(:pattern=>/after/) do |board, change_type, args|
