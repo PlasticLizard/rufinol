@@ -86,11 +86,25 @@ module Rufinol
         ws.onopen do
           sid = @channel.subscribe { |msg| ws.send msg }
 
-          ws.onmessage { |msg| @channel.push msg }
+          ws.onmessage { |msg| handleCommand(msg) }
 
           ws.onclose { @channel.unsubscribe(sid) }
         end
 
+      end
+    end
+
+    def handleCommand(message)
+      command = JSON.parse(message)
+      puts command.inspect
+      pin_id = command["pin"]
+      pin_type = pin_id[0..0]
+      pin_number = pin_id[1..-1].to_i
+      pin = pin_type == "a" ? @firmata.analog[pin_number] : @firmata.digital[pin_number]
+
+      case command["command"]
+      when "setPinMode" then pin.mode = command["mode"].to_i
+      when "setPinValue" then pin.write command["value"].to_f
       end
     end
 

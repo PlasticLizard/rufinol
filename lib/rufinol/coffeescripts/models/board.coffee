@@ -13,5 +13,4 @@ class Board extends Backbone.Model
     pins = if pinId[0] == "a" then this.analog_pins else this.digital_ports.at(portNumber).pins
     pins.get(pinId)
 
-
 this.Rufinol.models.Board = Board

@@ -1,9 +1,11 @@
 <html>
   <head>
     <link href="stylesheets/application.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="stylesheets/ui-lightness/jquery-ui-1.8.6.custom.css" type="text/css" rel="stylesheet" />
   </head>
   <body>
     <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js'></script>
+    <script src='javascripts/jquery-ui-1.8.6.custom.min.js'></script>
     <script src='javascripts/swfobject.js'></script>
     <script src='javascripts/FABridge.js'></script>
     <script src='javascripts/web_socket.js'></script>
@@ -18,25 +20,18 @@
     <script src='javascripts/views/pin_view.js'></script>
     <script src='javascripts/views/port_view.js'></script>
     <script src='javascripts/views/board_view.js'></script>
+    <script src='javascripts/application.js'></script>
     <script>
-      var board = null;
       $(document).ready(function(){
         Rufinol = window.Rufinol
         var boardData = <%=JSON.dump(@board)%>;
-        board = new Rufinol.models.Board(boardData);
-        var boardView = new Rufinol.views.BoardView({model : board})
-        $("body").append(boardView.render().el)
-
-
+        Rufinol.app = new Rufinol.views.Application(
+          {
+            boardData : boardData,
+            webSocketUri : "ws://<%=request.host%>:3001/"
+          }
+        ).start();
       });
-
-      $(document).ready(function(){
-        ws = new WebSocket("ws://<%=request.host%>:3001/");
-        ws.onmessage = function(evt) { board.updatePin(JSON.parse(evt.data)); };
-        ws.onclose = function() {};
-        ws.onopen = function() { console.log("connected");};
-      });
-
     </script>
 
     <script id="pin" type="text/html">
@@ -44,9 +39,19 @@
         <td>{{pin_number}}</td>
         <td>{{#pwm}}*{{/pwm}}</td>
         <td>{{#reporting}}*{{/reporting}}</td>
-        <td>Pin Select Goes Here</td>
         <td>
-          <div data-pin-field="value">{{formatted_value}}</div>
+          <select class='pin-mode'>
+            <option value="-1">Unavailable</option>
+            <option value="0">Input</option>
+            <option value="1">Output</option>
+            <option value="2">Analog</option>
+            <option value="3">PWM</option>
+          </select>
+        </td>
+        <td>
+          <div class="pin-editor-container" style="float:left"></div>
+          <div class="pin-value" style="float:left">{{formatted_value}}</div>
+          <div style="clear:both"></div>
         </td>
 
     </script>
@@ -73,7 +78,7 @@
 
     <script id="board" type="text/html">
 
-      <h2>Digital Ports</h2>
+      <h2>{{name}}</h2>
       <div class="digital-ports">
       </div>
       <h2>Analog Pins</h2>
